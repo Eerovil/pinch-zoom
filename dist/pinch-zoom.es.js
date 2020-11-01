@@ -158,6 +158,7 @@ class PinchZoom extends HTMLElement {
      */
     setTransform(opts = {}) {
         let scale = opts.scale || 1;
+        let { x = this.x, y = this.y, } = opts;
         if (!this.parentElement) {
             return;
         }
@@ -165,18 +166,22 @@ class PinchZoom extends HTMLElement {
         if (this._positioningEl) {
             const _thisBounds = this.getBoundingClientRect();
             let minScale;
+            let leeway = 0;
             if (thisParentBounds.width / thisParentBounds.height > _thisBounds.width / _thisBounds.height) {
                 minScale = thisParentBounds.width / _thisBounds.width;
+                leeway = 1 / _thisBounds.width;
             }
             else {
                 minScale = thisParentBounds.height / _thisBounds.height;
+                leeway = 1 / _thisBounds.height;
             }
             if (opts && (opts.scale || 0) < minScale) {
-                scale = minScale;
+                scale = minScale + leeway;
+                x = this.x;
+                y = this.y;
             }
         }
         const { allowChangeEvent = false, } = opts;
-        let { x = this.x, y = this.y, } = opts;
         // If we don't have an element to position, just set the value as given.
         // We'll check bounds later.
         if (!this._positioningEl) {
