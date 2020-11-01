@@ -157,7 +157,25 @@ class PinchZoom extends HTMLElement {
      * Update the stage with a given scale/x/y.
      */
     setTransform(opts = {}) {
-        const { scale = this.scale, allowChangeEvent = false, } = opts;
+        let scale = opts.scale || 1;
+        if (!this.parentElement) {
+            return;
+        }
+        const thisParentBounds = this.parentElement.getBoundingClientRect();
+        if (this._positioningEl) {
+            const _thisBounds = this.getBoundingClientRect();
+            let minScale;
+            if (thisParentBounds.width / thisParentBounds.height > _thisBounds.width / _thisBounds.height) {
+                minScale = thisParentBounds.width / _thisBounds.width;
+            }
+            else {
+                minScale = thisParentBounds.height / _thisBounds.height;
+            }
+            if (opts && (opts.scale || 0) < minScale) {
+                scale = minScale;
+            }
+        }
+        const { allowChangeEvent = false, } = opts;
         let { x = this.x, y = this.y, } = opts;
         // If we don't have an element to position, just set the value as given.
         // We'll check bounds later.
@@ -203,6 +221,18 @@ class PinchZoom extends HTMLElement {
         }
         else if (bottomRight.y < 0) {
             y += -bottomRight.y;
+        }
+        if (Math.floor(bottomRight.x) < thisParentBounds.width) {
+            x = thisParentBounds.width - positioningElBounds.width;
+        }
+        if (Math.floor(bottomRight.y) < thisParentBounds.height) {
+            y = thisParentBounds.height - positioningElBounds.height;
+        }
+        if (Math.floor(topLeft.x) > thisParentBounds.x) {
+            x = thisParentBounds.x;
+        }
+        if (Math.floor(topLeft.y) > thisParentBounds.y) {
+            y = thisParentBounds.y;
         }
         this._updateTransform(scale, x, y, allowChangeEvent);
     }
